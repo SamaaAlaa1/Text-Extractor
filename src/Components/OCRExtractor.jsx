@@ -33,14 +33,8 @@ const OCRExtractor = () => {
 
         setLoading(false);
     };
-    const downloadTextFile = () => {
-        const blob = new Blob([text], { type: "text/plain" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = "extracted_text.txt";
-        link.click();
-    };
-   
+
+
     const extractTextFromImage = async (file) => {
         const worker = await createWorker();
         try {
@@ -83,18 +77,18 @@ const OCRExtractor = () => {
     const openCamera = async () => {
         try {
             console.log("Checking camera support...");
-    
+
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 throw new Error("Camera API not supported on this device.");
             }
-    
+
             console.log("Requesting camera access...");
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: {
                     facingMode: { ideal: "environment" },
                 },
             });
-    
+
             if (!videoRef.current) {
                 console.warn("videoRef not available, retrying in 500ms...");
                 setTimeout(() => {
@@ -107,7 +101,7 @@ const OCRExtractor = () => {
                 videoRef.current.srcObject = stream;
                 console.log("Camera stream started");
             }
-    
+
             streamRef.current = stream;
             setIsCameraOn(true);
         } catch (error) {
@@ -120,12 +114,12 @@ const OCRExtractor = () => {
             );
         }
     };
-    
-    
-    
+
+
+
     const closeCamera = () => {
         if (streamRef.current) {
-            streamRef.current.getTracks().forEach(track => track.stop()); 
+            streamRef.current.getTracks().forEach(track => track.stop());
             streamRef.current = null;
         }
         if (videoRef.current) {
@@ -133,27 +127,34 @@ const OCRExtractor = () => {
         }
         setIsCameraOn(false);
     };
-    
-    const captureImage = () => {
+
+    const captureImage = async () => {
         if (!videoRef.current || !canvasRef.current) return;
-    
+
+        setLoading(true);
+
         const video = videoRef.current;
         const canvas = canvasRef.current;
         const ctx = canvas.getContext("2d");
-    
+
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
+
         const imageDataUrl = canvas.toDataURL("image/png");
         setImage(imageDataUrl);
-    
+
         const imageFile = dataURLtoFile(imageDataUrl, "captured-image.png");
-        extractTextFromImage(imageFile);
-    
-        closeCamera(); 
+
+        await extractTextFromImage(imageFile);
+
+        setLoading(false);
+
+        closeCamera();
     };
-    
+
+
+
 
     const dataURLtoFile = (dataUrl, filename) => {
         const arr = dataUrl.split(",");
@@ -170,19 +171,20 @@ const OCRExtractor = () => {
     return (
         <div className="flex flex-col md:flex-row items-center justify-between w-full mt-6 px-4">
             <div className="flex flex-col items-center space-y-4 justify-center w-full md:w-1/2">
-                {image && <img src={image} alt="Preview" className="w-[600px] rounded-lg shadow-lg border border-gray-600" />}
-                {isCameraOn ? (
+                {image ? (
+                    <img src={image} alt="Captured" className="w-[600px] rounded-lg shadow-lg border border-gray-600" />
+                ) : isCameraOn ? (
                     <div className="flex flex-col items-center">
                         <video ref={videoRef} autoPlay className="w-[500px] border border-gray-400 rounded-lg"></video>
-                        <button onClick={captureImage} className="mt-3 bg-green-600 text-white py-2 px-2 rounded-lg shadow-md hover:bg-green-700 transition">
-                            📸 Capture Image
+                        <button onClick={captureImage} className="mt-3 bg-blue-600 text-white py-2 px-2 rounded-lg shadow-md hover:bg-blue-900 transition flex">
+                            <Camera className="mr-2" size={18} /> Capture Image
                         </button>
-                        <button onClick={closeCamera} className="mt-2 bg-red-600 text-white py-2 px-4 rounded-lg shadow-md hover:bg-red-700 transition flex items-center">
-                            <StopCircle className="mr-2" size={18} /> Stop 
+                        <button onClick={closeCamera} className="mt-2 bg-[#ffffff11]  py-2 px-4 rounded-lg shadow-md hover:bg-[#6b6a6a11] text-red-500 transition flex items-center">
+                            <StopCircle className="mr-2" size={18} /> Stop
                         </button>
                     </div>
                 ) : (
-                    <button onClick={openCamera} className="flex items-center bg-blue-600 text-white py-2 px-4 rounded-lg shadow-md hover:bg-purple-700 transition">
+                    <button onClick={openCamera} className="flex items-center bg-blue-600 text-white py-2 px-4 rounded-lg shadow-md hover:bg-blue-900  transition">
                         <Camera className="mr-2" size={18} /> Open Camera
                     </button>
                 )}
@@ -196,14 +198,21 @@ const OCRExtractor = () => {
                 </label>
             </div>
 
-            {/* Right*/}
+
             <div className="w-full md:w-1/2 flex flex-col items-center justify-center mt-4 md:mt-0">
-                <textarea
-                    value={text}
-                    readOnly
-                    rows="14"
-                    className="w-[90%] p-3 border rounded-lg shadow-sm bg-gray-100 text-gray-700 resize-none"
-                />
+                {loading ? (
+                    <div className="flex flex-col items-center justify-center">
+                        <Loader className="animate-spin text-blue-600" size={40} />
+                        <p className="mt-2 text-blue-600 font-semibold">Processing...</p>
+                    </div>
+                ) : (
+                    <textarea
+                        value={text}
+                        readOnly
+                        rows="14"
+                        className="w-[90%] p-3 border rounded-lg shadow-sm bg-gray-100 text-gray-700 resize-none"
+                    />
+                )}
 
                 <div className="flex justify-center space-x-4 mt-3">
                     <button
@@ -221,13 +230,14 @@ const OCRExtractor = () => {
                             setText("Upload an image or PDF to extract text...");
                         }}
                         disabled={loading}
-                        className="flex items-center bg-red-600 text-white py-2 px-4 rounded-lg shadow-md hover:bg-red-700 transition disabled:opacity-50"
+                        className="flex items-center bg-[#ffffff11]  py-2 px-4 rounded-lg shadow-md  hover:bg-[#6b6a6a11] text-red-500 transition disabled:opacity-50"
                     >
                         <Trash className="mr-2" size={18} />
                         Clear
                     </button>
                 </div>
             </div>
+
         </div>
     );
 };
