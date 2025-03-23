@@ -155,7 +155,6 @@ const OCRExtractor = () => {
 
 
 
-
     const dataURLtoFile = (dataUrl, filename) => {
         const arr = dataUrl.split(",");
         const mime = arr[0].match(/:(.*?);/)[1];

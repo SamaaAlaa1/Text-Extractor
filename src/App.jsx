@@ -4,13 +4,17 @@ import "./App.css";
 
 function App() {
   return (
-    <div className="bg-[#1e1e1e] md:h-[100vh]  h-max py-8  flex flex-col items-center justify-center text-white px-4 ">
-      <div className="flex items-center space-x-2 mt-4 ">
-        <FileText className="text-blue-400 animate-bounce" size={40} />
-        <h2 className="text-3xl font-bold">OCR Text Extractor</h2>
-      </div>
-      <p className="text-gray-400 text-sm mb-8">Extract text from images or PDFs efficiently</p>
-      <OCRExtractor />
+    <div className=" min-h-screen flex flex-col items-center justify-center text-white px-6">
+      <div className="flex flex-col items-center text-center space-y-2 mt-6 animate-fade-in mb-12">
+        <div className="flex items-center space-x-2">
+          <FileText className="text-blue-400 drop-shadow-glow animate-bounce" size={42} />
+          <h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+            OCR Text Extractor
+          </h2>
+        </div>
+        <p className="text-gray-400 text-base italic ">Extract text from images or PDFs effortlessly</p>
+      </div>      
+        <OCRExtractor />
     </div>
   );
 }
