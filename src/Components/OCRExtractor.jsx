@@ -171,7 +171,7 @@ const OCRExtractor = () => {
         <div className="flex flex-col md:flex-row items-center justify-between w-full mt-6 px-4">
             <div className="flex flex-col items-center space-y-4 justify-center w-full md:w-1/2">
                 {image ? (
-                    <img src={image} alt="Captured" className="w-[600px] rounded-lg shadow-lg border border-gray-600" />
+                    <img src={image} alt="Captured" className=" w-[600px] h-[400px]  rounded-lg shadow-lg border border-gray-600" />
                 ) : isCameraOn ? (
                     <div className="flex flex-col items-center">
                         <video ref={videoRef} autoPlay className="w-[500px] border border-gray-400 rounded-lg"></video>
